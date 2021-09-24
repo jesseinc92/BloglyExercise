@@ -5,8 +5,12 @@
 {% block headline %}{{user.first_name}} {{user.last_name}}{% endblock %}
 
 {% block main_content %}
-    <img src="{{user.image_url}}" alt="user image">
+    <img src="{{user.image_url}}" alt="user image" width="150" height="150">
 
-    <input type="submit" value="Edit">
-    <input type="submit" value="Delete">
+    <form action="/users/{{user.id}}/edit">
+        <button>Edit</button>
+    </form>
+    <form action="/users/{{user.id}}/delete" method="POST">
+        <button>Delete</button>
+    </form>
 {% endblock %}

@@ -5,7 +5,7 @@
 {% block headline %}Edit a user{% endblock %}
 
 {% block main_content %}
-    <form action="">
+    <form action="/users/{{user.id}}/edit" method="POST">
         <label for="">
             First Name
             <input type="text" name="first_name" value="{{user.first_name}}">
@@ -21,6 +21,10 @@
             <input type="text" name="image_url" value="{{user.image_url}}">
         </label>
 
-        <button>Add</button>
+        <button>Save</button>
+    </form>
+
+    <form action="/users/{{user.id}}">
+        <button>Cancel</button>
     </form>
 {% endblock %}
