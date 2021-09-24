@@ -97,6 +97,8 @@ def edit_user(user_id):
     
 @app.route('/users/<int:user_id>/delete', methods=['POST'])
 def delete_user(user_id):
+    '''Deletes a user from the database and redirects to the user list.'''
+    
     
     user = User.query.filter_by(id=user_id)
     user.delete()
