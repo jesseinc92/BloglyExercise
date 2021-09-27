@@ -6,20 +6,17 @@
 
 {% block main_content %}
     <form action="/users/new" method="POST">
-        <label for="">
-            First Name
+        <p>First Name
             <input type="text" name="first_name" placeholder="Enter a first name">
-        </label>
+        </p>
 
-        <label for="">
-            Last Name
+        <p>Last Name
             <input type="text" name="last_name" placeholder="Enter a last name">
-        </label>
+        </p>
 
-        <label for="">
-            Image URL
+        <p>Image URL
             <input type="text" name="image_url" placeholder="Provide an image of this user">
-        </label>
+        </p>
 
         <button>Add</button>
     </form>

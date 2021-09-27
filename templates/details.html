@@ -2,7 +2,7 @@
 
 {% block title %}User Details{% endblock %}
 
-{% block headline %}{{user.first_name}} {{user.last_name}}{% endblock %}
+{% block headline %}{{user.fullname()}}{% endblock %}
 
 {% block main_content %}
     <img src="{{user.image_url}}" alt="user image" width="150" height="150">
@@ -12,5 +12,15 @@
     </form>
     <form action="/users/{{user.id}}/delete" method="POST">
         <button>Delete</button>
+    </form>
+
+    <h2>Posts</h2>
+    <ul>
+        {% for post in user.posts %}
+        <li><a href="/posts/{{post.id}}">{{post.title}}</a></li>
+        {% endfor %}
+    </ul>
+    <form action="/users/{{user.id}}/posts/new" method="GET">
+        <button>Add Post</button>
     </form>
 {% endblock %}
