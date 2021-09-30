@@ -1,8 +1,9 @@
 """Blogly application."""
 
+from operator import pos
 from flask import Flask, render_template, redirect, request
 from flask_debugtoolbar import DebugToolbarExtension
-from models import db, connect_db, User, Post
+from models import db, connect_db, User, Post, Tag, PostTag
 from datetime import datetime
 
 
@@ -114,8 +115,9 @@ def new_post(user_id):
     if request.method == 'GET':
     
         user = User.query.get(user_id)
+        tags = Tag.query.all()
     
-        return render_template('new-post.html', user=user)
+        return render_template('new-post.html', user=user, tags=tags)
     
     if request.method == 'POST':
         
@@ -126,8 +128,20 @@ def new_post(user_id):
         
         new_post = Post(title=title, content=content, created_at=created_at, owning_user=user_id)
         
+        # commit new post to obtain post.id
         db.session.add(new_post)
         db.session.commit()
+        
+        post_tags = request.form.getlist('tag-check')
+        
+        # loop through all selected tags to get their ids and commit them to db
+        for tag in post_tags:
+            tag_id = Tag.query.filter_by(name=tag).one()
+            
+            new_post_tag = PostTag(post_id=new_post.id, tag_id=tag_id.id)
+            
+            db.session.add(new_post_tag)
+            db.session.commit()
         
         return redirect(f'/users/{user_id}')
     
@@ -148,8 +162,9 @@ def edit_post(post_id):
     if request.method == 'GET':
         
         post = Post.query.get(post_id)
+        tags = Tag.query.all()
         
-        return render_template('edit-post.html', post=post)
+        return render_template('edit-post.html', post=post, tags=tags)
     
     if request.method == 'POST':
         
@@ -162,6 +177,37 @@ def edit_post(post_id):
         
         db.session.commit()
         
+        existing_tags = list()
+        
+        for obj in updated_post.tags:
+            existing_tags.append(obj.name)
+        
+        # delete all PostTag rows for this specific post
+        for tag in existing_tags:
+            
+            tag_id = Tag.query.filter_by(name=tag).one()
+            delete_tag = PostTag.query.get((updated_post.id, tag_id.id))
+            db.session.delete(delete_tag)
+            
+            print(delete_tag)
+            print('Delete')
+            
+            db.session.commit()
+        
+        
+        post_tags = request.form.getlist('tag-check')
+        
+        # add all selected tags to PostTag for this post
+        for tag in post_tags:
+            
+            tag_id = Tag.query.filter_by(name=tag).one()
+            updated_post_tag = PostTag(post_id=updated_post.id, tag_id=tag_id.id)
+            
+            print('Add')
+            
+            db.session.add(updated_post_tag)
+            db.session.commit()
+        
         return redirect(f'/posts/{post_id}')
     
     
@@ -169,9 +215,95 @@ def edit_post(post_id):
 def delete_post(post_id):
     '''Deletes a post and redirects back to a user screen.'''
     
-    post = Post.query.filter_by(id=post_id)
-    post.delete()
+    # get post
+    post = Post.query.filter_by(id=post_id).one_or_none()
+    post_obj = Post.query.filter_by(id=post_id)
+    
+    # get PostTag rows and delete
+    for post_tag in post.tags:
+        tag = Tag.query.filter_by(name=post_tag.name).one()
+        delete_tag = PostTag.query.get((post.id, tag.id))
+        
+        print(delete_tag)
+        
+        db.session.delete(delete_tag)
+        
+        db.session.commit()
+    
+    # delete actual post after removing dependencies
+    post_obj.delete()
     
     db.session.commit()
     
     return redirect(f'/users')
+
+
+@app.route('/tags')
+def get_tags():
+    '''Gets a list of tags from db and displays them.'''
+    
+    tags = Tag.query.all()
+    
+    return render_template('tags.html', tags=tags)
+
+
+@app.route('/tags/<int:tag_id>')
+def tag_detail(tag_id):
+    '''Gets list of posts that tag appears on.'''
+    
+    tag = Tag.query.get(tag_id)
+    
+    return render_template('tag-details.html', tag=tag)
+
+
+@app.route('/tags/new', methods=['GET', 'POST'])
+def new_tags():
+    '''Displays a form to add a new tag, and saves the new tag information.'''
+    
+    if request.method == 'GET':
+        return render_template('add-tag.html')
+    
+    if request.method == 'POST':
+        
+        name = request.form['tag-name']
+        
+        new_tag = Tag(name=name)
+        
+        db.session.add(new_tag)
+        db.session.commit()
+        
+        return redirect('/tags')
+
+
+@app.route('/tags/<int:tag_id>/edit', methods=['GET', 'POST'])
+def edit_tag(tag_id):
+    '''Displays tag edit form.'''
+    
+    if request.method == 'GET':
+    
+        tag = Tag.query.get(tag_id)
+        
+        return render_template('edit-tag.html', tag=tag)
+    
+    if request.method == 'POST':
+        
+        name = request.form['tag-name']
+        
+        update_tag = Tag.query.get(tag_id)
+        update_tag.name = name
+        
+        db.session.commit()
+         
+        return redirect('/tags')
+
+
+@app.route('/tags/<int:tag_id>/delete', methods=['POST'])
+def delete_tag(tag_id):
+    '''Deletes tag from db and redirects to tag list'''
+    
+    tag = Tag.query.filter_by(id=tag_id)
+    tag.delete()
+    
+    db.session.commit()
+    
+    return redirect('/tags')

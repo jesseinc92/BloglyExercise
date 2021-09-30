@@ -9,6 +9,11 @@
 
     <p>By {{post.user.fullname()}}</p>
 
+    <p>Tags:</p>
+    {% for tag in post.tags %}
+    <p>{{tag.name}}</p>
+    {% endfor %}
+
     <a href="/users/{{post.user.id}}">Cancel</a>
     
     <form action="/posts/{{post.id}}/edit">

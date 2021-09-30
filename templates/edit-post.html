@@ -14,6 +14,14 @@
             <input type="text" name="content" value="{{post.content}}">
         </p>
 
+        <p>Tags: </p>
+        {% for tag in tags %}
+        <p><input type="checkbox" name="tag-check" value="{{tag.name}}"
+            {% if tag in post.tags %}
+            checked
+            {% endif %}> {{tag.name}}</p>
+        {% endfor %}
+
         <a href="/users/{{post.user.id}}">Cancel</a>
         <button type="submit">Edit</button>
     </form>

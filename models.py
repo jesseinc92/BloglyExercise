@@ -41,3 +41,23 @@ class Post(db.Model):
     owning_user = db.Column(db.Integer, db.ForeignKey('users.id'))
     
     user = db.relationship('User', backref='posts')
+    
+    
+class Tag(db.Model):
+    '''Model to build tags.'''
+    
+    __tablename__ = 'tags'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Text, nullable=False, unique=True)
+    
+    posts = db.relationship('Post', secondary='post_tag', backref='tags')
+    
+    
+class PostTag(db.Model):
+    '''Table that references both tags and posts.'''
+    
+    __tablename__ = 'post_tag'
+    
+    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), primary_key=True)
+    tag_id = db.Column(db.Integer, db.ForeignKey('tags.id'), primary_key=True)
